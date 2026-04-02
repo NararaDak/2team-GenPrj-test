@@ -21,7 +21,6 @@ const ImageGeneration = () => {
     setIsGenerating(true);
     const url = miireboxApi.getImageGenerateUrl(promptText.trim());
     setImageUrl(url);
-    setIsGenerating(false);
   };
 
   return (
@@ -46,6 +45,13 @@ const ImageGeneration = () => {
         {isGenerating ? '생성 중...' : '생성'}
       </button>
 
+      {isGenerating && (
+        <div className="image-generation__loading" role="status" aria-live="polite">
+          <span className="image-generation__loading-spinner" aria-hidden="true" />
+          이미지 생성 중입니다. 잠시만 기다려 주세요.
+        </div>
+      )}
+
       {/* 생성된 이미지 표시 영역 */}
       {imageUrl && (
         <div className="image-generation__result">
@@ -53,6 +59,8 @@ const ImageGeneration = () => {
             className="image-generation__result-img"
             src={imageUrl}
             alt="생성된 이미지"
+            onLoad={() => setIsGenerating(false)}
+            onError={() => setIsGenerating(false)}
           />
         </div>
       )}

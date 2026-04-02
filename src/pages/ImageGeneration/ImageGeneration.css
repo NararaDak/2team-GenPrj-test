@@ -49,6 +49,30 @@
   cursor: not-allowed;
 }
 
+.image-generation__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #255a94;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.image-generation__loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #c6d9f0;
+  border-top-color: #4a90e2;
+  border-radius: 50%;
+  animation: image-generation-spin 0.8s linear infinite;
+}
+
+@keyframes image-generation-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* 생성된 이미지 결과 영역 */
 .image-generation__result {
   margin-top: 20px;
