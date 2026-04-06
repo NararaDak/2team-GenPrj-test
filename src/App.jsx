@@ -8,6 +8,7 @@ import ImagePrompt from './pages/ImagePrompt/ImagePrompt';
 import Test from './pages/Test/Test';
 import Login from './pages/Login/Login';
 import Signup from './pages/Login/Signup';
+import ImageAttachment from './pages/ImageAttachment/ImageAttachment';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="test" element={<Test />} />
           <Route path="login" element={<Login />} />
           <Route path="login/signup" element={<Signup />} />
+          <Route path="image-attachment" element={<ImageAttachment />} />
         </Route>
       </Routes>
     </Router>

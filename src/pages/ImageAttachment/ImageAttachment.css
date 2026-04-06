@@ -1,0 +1,145 @@
+.image-attachment-page {
+  display: grid;
+  gap: 14px;
+}
+
+.image-attachment-page__message {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.image-attachment-page__message--error {
+  background: #fff3f1;
+  color: #b9382f;
+  border: 1px solid #f2c5c1;
+}
+
+.image-attachment-page__message--success {
+  background: #edf8ef;
+  color: #1f7a45;
+  border: 1px solid #c8e7ce;
+}
+
+.image-attachment-page__layout {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 320px 1fr;
+}
+
+.image-attachment-page__panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d7dce5;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.image-attachment-page__panel h2,
+.image-attachment-page__panel h3 {
+  margin: 0;
+}
+
+.image-attachment-page input,
+.image-attachment-page button {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #cfd6e2;
+  padding: 0 10px;
+}
+
+.image-attachment-page button {
+  border-color: #5a84d6;
+  background: #5a84d6;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.image-attachment-page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.image-attachment-page__filters {
+  display: grid;
+  gap: 8px;
+}
+
+.image-attachment-page__filters label,
+.image-attachment-page__panel > label {
+  font-weight: 600;
+  color: #24344d;
+}
+
+.image-attachment-page__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.image-attachment-page__list button {
+  width: 100%;
+  height: auto;
+  min-height: 50px;
+  padding: 8px 10px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  background: #f4f7fd;
+  color: #24344d;
+  border-color: #d7dce5;
+}
+
+.image-attachment-page__list button.is-active {
+  border-color: #5a84d6;
+  box-shadow: 0 0 0 2px rgba(90, 132, 214, 0.2);
+}
+
+.image-attachment-page__dropzone {
+  border: 1px dashed #c1cada;
+  border-radius: 8px;
+  background: #f9fbff;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.image-attachment-page__dropzone p {
+  margin: 0;
+  color: #4e5d74;
+}
+
+.image-attachment-page__preview-box {
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fdfdff;
+}
+
+.image-attachment-page__preview-box img {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.image-attachment-page__detail {
+  display: grid;
+  gap: 4px;
+}
+
+.image-attachment-page__detail p {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .image-attachment-page__layout {
+    grid-template-columns: 1fr;
+  }
+}

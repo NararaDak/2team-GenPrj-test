@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../../api/users';
+import { getSignupState, setSignupState } from '../../common/storage';
 import AuthField from './components/AuthField';
 import './AuthPage.css';
 
 const Signup = () => {
+  // 초기 상태 한 번만 로드
+  const savedState = getSignupState();
   const navigate = useNavigate();
-  const [loginId, setLoginId] = useState('');
-  const [nickname, setNickname] = useState('');
+  const [loginId, setLoginId] = useState(savedState.loginId || '');
+  const [nickname, setNickname] = useState(savedState.nickname || '');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -16,12 +19,30 @@ const Signup = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // loginId, nickname 상태 변경 시 저장 (password는 저장하지 않음)
+  useEffect(() => {
+    setSignupState({
+      loginId,
+      nickname,
+    });
+  }, [loginId, nickname]);
+
+  // 언마운트 시 상태 저장 (명시적 보장)
+  useEffect(() => {
+    return () => {
+      setSignupState({
+        loginId,
+        nickname,
+      });
+    };
+  }, [loginId, nickname]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!loginId.trim() || !password.trim() || !passwordConfirm.trim()) {
+    if (!loginId.trim() || !nickname.trim() || !password.trim() || !passwordConfirm.trim()) {
       setSuccessMessage('');
-      setErrorMessage('아이디와 비밀번호를 모두 입력해 주세요.');
+      setErrorMessage('아이디, 이름(닉네임), 비밀번호를 모두 입력해 주세요.');
       return;
     }
 
@@ -35,7 +56,7 @@ const Signup = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    const response = await usersApi.signup(loginId.trim(), password);
+    const response = await usersApi.signup(loginId.trim(), nickname.trim(), password);
 
     if (response.ok) {
       setSuccessMessage('회원가입이 완료되었습니다. 로그인 화면으로 이동해 주세요.');
@@ -92,11 +113,6 @@ const Signup = () => {
             autoComplete="new-password"
           />
 
-          {nickname.trim() && (
-            <p className="auth-feedback auth-feedback--muted">
-              현재 백엔드 사양에는 닉네임 저장 항목이 없어 화면 입력만 유지합니다.
-            </p>
-          )}
           {errorMessage && <p className="auth-feedback auth-feedback--error">{errorMessage}</p>}
           {successMessage && <p className="auth-feedback auth-feedback--success">{successMessage}</p>}
 

@@ -1,20 +1,32 @@
-/* 이미지 생성 페이지 */
 .image-generation {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 16px;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px;
 }
 
-/* 프롬프트 여러 줄 입력 텍스트박스 */
+.image-generation__form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #d7dce5;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.image-generation__label {
+  display: block;
+  margin-bottom: -4px;
+  color: #24344d;
+  font-weight: 600;
+}
+
 .image-generation__prompt {
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid #cfd6e2;
+  border-radius: 8px;
+  background: #f9fbff;
+  color: #1e2a3d;
   resize: vertical;
   box-sizing: border-box;
   line-height: 1.6;
@@ -22,30 +34,26 @@
 
 .image-generation__prompt:focus {
   outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  border-color: #5a84d6;
+  box-shadow: 0 0 0 2px rgba(90, 132, 214, 0.2);
 }
 
-/* 생성 버튼 */
 .image-generation__btn {
-  align-self: flex-start;
-  padding: 10px 28px;
-  font-size: 1rem;
-  font-weight: 600;
+  height: 44px;
+  border: 1px solid #5a84d6;
+  background: #5a84d6;
   color: #fff;
-  background-color: #4a90e2;
-  border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .image-generation__btn:hover:not(:disabled) {
-  background-color: #357abd;
+  background: #4c76cb;
 }
 
 .image-generation__btn:disabled {
-  background-color: #a0b8d8;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
@@ -73,9 +81,11 @@
   }
 }
 
-/* 생성된 이미지 결과 영역 */
 .image-generation__result {
-  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #d7dce5;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .image-generation__result-img {

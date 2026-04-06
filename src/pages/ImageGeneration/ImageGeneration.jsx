@@ -1,14 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './ImageGeneration.css';
 import { modelApi } from '../../api/modelApi';
+import { getImageGenerationState, setImageGenerationState } from '../../common/storage';
+
+// Blob URL을 Data URI로 변환하는 헬퍼 함수
+const blobUrlToDataUri = async (blobUrl) => {
+  try {
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('이미지 변환 실패:', error);
+    return '';
+  }
+};
 
 const ImageGeneration = () => {
-  const [promptText, setPromptText] = useState('');
-  const [positivePromptText, setPositivePromptText] = useState('');
-  const [negativePromptText, setNegativePromptText] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  // 초기 상태 한 번만 로드
+  const savedState = getImageGenerationState();
+  const [promptText, setPromptText] = useState(savedState.promptText || '');
+  const [positivePromptText, setPositivePromptText] = useState(savedState.positivePromptText || '');
+  const [negativePromptText, setNegativePromptText] = useState(savedState.negativePromptText || '');
+  const [imageUrl, setImageUrl] = useState(savedState.imageDataUri || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // 상태 변경 시 저장
+  useEffect(() => {
+    setImageGenerationState({
+      promptText,
+      positivePromptText,
+      negativePromptText,
+      imageDataUri: imageUrl,
+    });
+  }, [promptText, positivePromptText, negativePromptText, imageUrl]);
+
+  // 언마운트 시 상태 저장 (명시적 보장)
+  useEffect(() => {
+    return () => {
+      setImageGenerationState({
+        promptText,
+        positivePromptText,
+        negativePromptText,
+        imageDataUri: imageUrl,
+      });
+    };
+  }, [promptText, positivePromptText, negativePromptText, imageUrl]);
 
   const handlePromptChange = (event) => {
     setPromptText(event.target.value);
@@ -33,7 +75,13 @@ const ImageGeneration = () => {
       negativePromptText,
     );
     if (response.ok) {
-      setImageUrl(response.blobUrl);
+      // Blob URL을 Data URI로 변환해서 저장
+      const dataUri = await blobUrlToDataUri(response.blobUrl);
+      if (dataUri) {
+        setImageUrl(dataUri);
+      } else {
+        setImageUrl(response.blobUrl); // 변환 실패 시 원본 URL 사용
+      }
     } else {
       setErrorMsg(response.error || '이미지 생성에 실패했습니다.');
     }
@@ -41,41 +89,54 @@ const ImageGeneration = () => {
   };
 
   return (
-    <div className="image-generation">
+    <section className="image-generation">
       <h1>이미지 생성</h1>
 
-      {/* 여러 줄 프롬프트 입력 텍스트박스 */}
-      <textarea
-        className="image-generation__prompt"
-        value={promptText}
-        onChange={handlePromptChange}
-        placeholder="기본 프롬프트를 입력하세요."
-        rows={4}
-      />
+      <div className="image-generation__form">
+        <label className="image-generation__label" htmlFor="image-generation-prompt">
+          기본 프롬프트
+        </label>
+        <textarea
+          id="image-generation-prompt"
+          className="image-generation__prompt"
+          value={promptText}
+          onChange={handlePromptChange}
+          placeholder="기본 프롬프트를 입력하세요."
+          rows={4}
+        />
 
-      <textarea
-        className="image-generation__prompt"
-        value={positivePromptText}
-        onChange={handlePositivePromptChange}
-        placeholder="포지티브 프롬프트를 입력하세요."
-        rows={4}
-      />
+        <label className="image-generation__label" htmlFor="image-generation-positive">
+          포지티브 프롬프트
+        </label>
+        <textarea
+          id="image-generation-positive"
+          className="image-generation__prompt"
+          value={positivePromptText}
+          onChange={handlePositivePromptChange}
+          placeholder="포지티브 프롬프트를 입력하세요."
+          rows={4}
+        />
 
-      <textarea
-        className="image-generation__prompt"
-        value={negativePromptText}
-        onChange={handleNegativePromptChange}
-        placeholder="네가티브 프롬프트를 입력하세요."
-        rows={6}
-      />
+        <label className="image-generation__label" htmlFor="image-generation-negative">
+          네가티브 프롬프트
+        </label>
+        <textarea
+          id="image-generation-negative"
+          className="image-generation__prompt"
+          value={negativePromptText}
+          onChange={handleNegativePromptChange}
+          placeholder="네가티브 프롬프트를 입력하세요."
+          rows={6}
+        />
 
-      <button
-        className="image-generation__btn"
-        onClick={handleGenerateClick}
-        disabled={isGenerating}
-      >
-        {isGenerating ? '생성 중...' : '생성'}
-      </button>
+        <button
+          className="image-generation__btn"
+          onClick={handleGenerateClick}
+          disabled={isGenerating}
+        >
+          {isGenerating ? '생성 중...' : '생성'}
+        </button>
+      </div>
 
       {isGenerating && (
         <div className="image-generation__loading" role="status" aria-live="polite">
@@ -97,7 +158,7 @@ const ImageGeneration = () => {
           />
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

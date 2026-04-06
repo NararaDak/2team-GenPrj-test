@@ -1,10 +1,11 @@
 import BaseApi from './baseApi';
 
 class UsersApi extends BaseApi {
-  async signup(userName, userPassword) {
+  async signup(userId, userName, userPassword) {
     return this.post(
       '/user/signup',
       {
+        user_id: userId,
         user_name: userName,
         user_passwd: userPassword,
       },
@@ -12,11 +13,11 @@ class UsersApi extends BaseApi {
     );
   }
 
-  async login(userName, userPassword) {
+  async login(userId, userPassword) {
     return this.post(
       '/user/login',
       {
-        user_name: userName,
+        user_id: userId,
         user_passwd: userPassword,
       },
       '로그인에 실패했습니다.',

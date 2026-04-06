@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../../api/users';
+import { setLastLoginUserId, getLoginState, setLoginState } from '../../common/storage';
 import AuthField from './components/AuthField';
 import './AuthPage.css';
 
 const Login = () => {
+  // 초기 상태 한 번만 로드
+  const savedState = getLoginState();
   const navigate = useNavigate();
-  const [loginId, setLoginId] = useState('');
+  const [loginId, setLoginId] = useState(savedState.loginId || '');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // loginId 상태 변경 시 저장 (password는 저장하지 않음)
+  useEffect(() => {
+    setLoginState({
+      loginId,
+    });
+  }, [loginId]);
+
+  // 언마운트 시 상태 저장 (명시적 보장)
+  useEffect(() => {
+    return () => {
+      setLoginState({
+        loginId,
+      });
+    };
+  }, [loginId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -30,7 +49,9 @@ const Login = () => {
 
     if (response.ok) {
       const userInfo = Array.isArray(response.data) ? response.data[0] : null;
-      const loginName = userInfo?.user_name || loginId.trim();
+      const resolvedUserId = userInfo?.user_id || loginId.trim();
+      const loginName = userInfo?.user_name || resolvedUserId;
+      setLastLoginUserId(resolvedUserId);
       setSuccessMessage(`${loginName}님 로그인에 성공했습니다.`);
       setIsSubmitting(false);
       return;
