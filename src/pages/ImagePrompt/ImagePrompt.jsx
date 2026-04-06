@@ -12,6 +12,8 @@ const fileToBase64 = (file) =>
 
 const ImagePrompt = () => {
   const [promptText, setPromptText] = useState('');
+  const [positivePromptText, setPositivePromptText] = useState('');
+  const [negativePromptText, setNegativePromptText] = useState('');
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [strength, setStrength] = useState(0.75);
@@ -21,6 +23,14 @@ const ImagePrompt = () => {
 
   const handlePromptChange = (e) => {
     setPromptText(e.target.value);
+  };
+
+  const handlePositivePromptChange = (e) => {
+    setPositivePromptText(e.target.value);
+  };
+
+  const handleNegativePromptChange = (e) => {
+    setNegativePromptText(e.target.value);
   };
 
   const handleStrengthChange = (e) => {
@@ -40,7 +50,13 @@ const ImagePrompt = () => {
 
     try {
       const imageBase64 = await fileToBase64(uploadedFile);
-      const response = await miireboxApi.changeImage(promptText.trim(), imageBase64, strength);
+      const response = await miireboxApi.changeImage(
+        promptText.trim(),
+        imageBase64,
+        strength,
+        positivePromptText,
+        negativePromptText,
+      );
 
       if (response.ok) {
         setResultImageUrl(response.blobUrl);
@@ -99,7 +115,23 @@ const ImagePrompt = () => {
         className="image-prompt__textarea"
         value={promptText}
         onChange={handlePromptChange}
-        placeholder="이미지 생성을 위한 프롬프트를 입력하세요."
+        placeholder="기본 프롬프트를 입력하세요."
+        rows={4}
+      />
+
+      <textarea
+        className="image-prompt__textarea"
+        value={positivePromptText}
+        onChange={handlePositivePromptChange}
+        placeholder="포지티브 프롬프트를 입력하세요."
+        rows={4}
+      />
+
+      <textarea
+        className="image-prompt__textarea"
+        value={negativePromptText}
+        onChange={handleNegativePromptChange}
+        placeholder="네가티브 프롬프트를 입력하세요."
         rows={6}
       />
 
