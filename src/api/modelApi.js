@@ -39,6 +39,14 @@ class ModelApi extends BaseApi {
             error: `API 오류: ${error.response.statusText}`,
           };
         }
+
+        if (error.request) {
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            error: '네트워크 연결 실패: 서버 미응답(CORS/SSL/도메인 접근 여부를 확인해 주세요).',
+          };
+        }
       }
 
       return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 실패: ${error.message}` };
@@ -79,6 +87,14 @@ class ModelApi extends BaseApi {
             apiUrl: this.buildUrl(urlPath),
             statusCode: error.response.status,
             error: `API 오류: ${error.response.statusText}`,
+          };
+        }
+
+        if (error.request) {
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            error: '네트워크 연결 실패: 서버 미응답(CORS/SSL/도메인 접근 여부를 확인해 주세요).',
           };
         }
       }
