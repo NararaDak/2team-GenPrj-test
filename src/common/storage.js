@@ -134,7 +134,8 @@ export const getImagePromptState = () => {
     negativePromptText: '',
     strength: 0.75,
     uploadedImageDataUri: '', // 업로드된 원본 이미지 Data URI
-    resultImageDataUri: '',   // 변환 결과 이미지 Data URI
+    resultImageDataUri: '',   // 생성 결과 이미지 Data URI
+    backgroundResultImageDataUri: '', // 백그라운드 생성 결과 이미지 Data URI
   };
   return getStorageJSON(STORAGE_KEYS.imagePromptState, defaultState);
 };

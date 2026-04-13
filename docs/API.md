@@ -254,6 +254,54 @@ if (response.ok) {
 ```
 
 
+### 4.4 makeBackgroundImage(imageBase64, prompt, positivePrompt, negativePrompt, taskPrompt)
+
+원본 이미지를 기준으로 배경 생성 이미지를 받는 API다.
+
+호출 주소:
+
+```text
+POST /model/makebgimage
+```
+
+요청 본문 예시:
+
+```js
+{
+	prompt: '카페 홍보용 배경으로 자연스럽게 정리해줘',
+	positive_prompt: 'clean background, realistic, product centered',
+	negative_prompt: 'text, watermark, blurry',
+	task_prompt: '<DETAILED_CAPTION>',
+	image_base64: 'data:image/png;base64,...',
+}
+```
+
+파라미터:
+
+- imageBase64: 필수
+- prompt: 선택
+- positivePrompt: 선택
+- negativePrompt: 선택
+- taskPrompt: 선택
+
+예시:
+
+```js
+const response = await modelApi.makeBackgroundImage(
+	uploadedImageDataUri,
+	promptText,
+	positivePromptText,
+	negativePromptText,
+);
+
+if (response.ok) {
+	setImageUrl(response.blobUrl);
+} else {
+	setErrorMsg(response.error || '백그라운드 생성에 실패했습니다.');
+}
+```
+
+
 ## 5. adverApi.js 사용 방법
 
 파일:

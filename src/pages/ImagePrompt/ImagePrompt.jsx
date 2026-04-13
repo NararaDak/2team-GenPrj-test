@@ -39,7 +39,9 @@ const ImagePrompt = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [strength, setStrength] = useState(savedState.strength || 0.75);
   const [resultImageUrl, setResultImageUrl] = useState(savedState.resultImageDataUri || '');
+  const [backgroundResultImageUrl, setBackgroundResultImageUrl] = useState(savedState.backgroundResultImageDataUri || '');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   // 상태 변경 시 저장
@@ -51,8 +53,9 @@ const ImagePrompt = () => {
       strength,
       uploadedImageDataUri: uploadedImageUrl,
       resultImageDataUri: resultImageUrl,
+      backgroundResultImageDataUri: backgroundResultImageUrl,
     });
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, backgroundResultImageUrl]);
 
   // 언마운트 시 상태 저장 (명시적 보장)
   useEffect(() => {
@@ -64,9 +67,10 @@ const ImagePrompt = () => {
         strength,
         uploadedImageDataUri: uploadedImageUrl,
         resultImageDataUri: resultImageUrl,
+        backgroundResultImageDataUri: backgroundResultImageUrl,
       });
     };
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, backgroundResultImageUrl]);
 
   const handlePromptChange = (event) => {
     setPromptText(event.target.value);
@@ -84,6 +88,16 @@ const ImagePrompt = () => {
     setStrength(parseFloat(event.target.value));
   };
 
+  const getGeneratedImageDataUri = async (response, fallbackMessage) => {
+    if (response.ok) {
+      const dataUri = await blobUrlToDataUri(response.blobUrl);
+      return dataUri || response.blobUrl;
+    }
+
+    setErrorMsg(response.error || fallbackMessage);
+    return '';
+  };
+
   const handleGenerateClick = async () => {
     if (!promptText.trim()) return;
     // File 객체 없어도 저장된 Data URI가 있으면 사용 가능
@@ -94,8 +108,8 @@ const ImagePrompt = () => {
     }
 
     setIsGenerating(true);
+  setLoadingText('이미지 변환 중입니다. 잠시만 기다려 주세요.');
     setErrorMsg('');
-    setResultImageUrl('');
 
     try {
       // File이 있으면 변환, 없으면 저장된 Data URI(uploadedImageUrl) 직접 사용
@@ -110,21 +124,45 @@ const ImagePrompt = () => {
         negativePromptText,
       );
 
-      if (response.ok) {
-        // Blob URL을 Data URI로 변환해서 저장
-        const dataUri = await blobUrlToDataUri(response.blobUrl);
-        if (dataUri) {
-          setResultImageUrl(dataUri);
-        } else {
-          setResultImageUrl(response.blobUrl); // 변환 실패 시 원본 URL 사용
-        }
-      } else {
-        setErrorMsg(response.error || '이미지 변환에 실패했습니다.');
-      }
+      const generatedImageUrl = await getGeneratedImageDataUri(response, '이미지 변환에 실패했습니다.');
+      if (generatedImageUrl) setResultImageUrl(generatedImageUrl);
     } catch (error) {
       setErrorMsg(`오류가 발생했습니다: ${error.message}`);
     } finally {
       setIsGenerating(false);
+      setLoadingText('');
+    }
+  };
+
+  const handleBackgroundGenerateClick = async () => {
+    const hasImage = uploadedFile !== null || uploadedImageUrl !== '';
+    if (!hasImage) {
+      setErrorMsg('이미지를 먼저 업로드하거나 붙여넣기 해주세요.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setLoadingText('백그라운드 생성 중입니다. 잠시만 기다려 주세요.');
+    setErrorMsg('');
+
+    try {
+      const imageBase64 = uploadedFile
+        ? await fileToBase64(uploadedFile)
+        : uploadedImageUrl;
+      const response = await modelApi.makeBackgroundImage(
+        imageBase64,
+        promptText,
+        positivePromptText,
+        negativePromptText,
+      );
+
+      const generatedImageUrl = await getGeneratedImageDataUri(response, '백그라운드 생성에 실패했습니다.');
+      if (generatedImageUrl) setBackgroundResultImageUrl(generatedImageUrl);
+    } catch (error) {
+      setErrorMsg(`오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+      setLoadingText('');
     }
   };
 
@@ -240,14 +278,24 @@ const ImagePrompt = () => {
           />
         </div>
 
-        <button
-          className="image-prompt__btn"
-          type="button"
-          onClick={handleGenerateClick}
-          disabled={isGenerating}
-        >
-          {isGenerating ? '생성 중...' : '생성'}
-        </button>
+        <div className="image-prompt__actions">
+          <button
+            className="image-prompt__btn"
+            type="button"
+            onClick={handleGenerateClick}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '생성 중...' : '생성'}
+          </button>
+          <button
+            className="image-prompt__btn image-prompt__btn--secondary"
+            type="button"
+            onClick={handleBackgroundGenerateClick}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '생성 중...' : '백그라운드생성'}
+          </button>
+        </div>
       </div>
 
       {errorMsg && (
@@ -257,19 +305,43 @@ const ImagePrompt = () => {
       {isGenerating && (
         <div className="image-prompt__loading" role="status" aria-live="polite">
           <span className="image-prompt__loading-spinner" aria-hidden="true" />
-          이미지 변환 중입니다. 잠시만 기다려 주세요.
+          {loadingText}
         </div>
       )}
 
-      {resultImageUrl && (
-        <div className="image-prompt__generated-box">
-          <img
-            className="image-prompt__generated-image"
-            src={resultImageUrl}
-            alt="변환된 이미지"
-          />
-        </div>
-      )}
+      <div className="image-prompt__result-section">
+        <h3 className="image-prompt__result-title">생성 결과</h3>
+        {resultImageUrl ? (
+          <div className="image-prompt__generated-box">
+            <img
+              className="image-prompt__generated-image"
+              src={resultImageUrl}
+              alt="생성된 이미지"
+            />
+          </div>
+        ) : (
+          <div className="image-prompt__empty-result" aria-label="생성 결과 빈 구역">
+            생성 결과가 없습니다.
+          </div>
+        )}
+      </div>
+
+      <div className="image-prompt__result-section">
+        <h3 className="image-prompt__result-title">백그라운드 생성 결과</h3>
+        {backgroundResultImageUrl ? (
+          <div className="image-prompt__generated-box">
+            <img
+              className="image-prompt__generated-image"
+              src={backgroundResultImageUrl}
+              alt="백그라운드 생성된 이미지"
+            />
+          </div>
+        ) : (
+          <div className="image-prompt__empty-result" aria-label="백그라운드 생성 결과 빈 구역">
+            백그라운드 생성 결과가 없습니다.
+          </div>
+        )}
+      </div>
     </section>
   );
 };

@@ -69,22 +69,23 @@ const ImageGeneration = () => {
     setIsGenerating(true);
     setImageUrl('');
     setErrorMsg('');
+
     const response = await modelApi.generateImage(
       promptText.trim(),
       positivePromptText,
       negativePromptText,
     );
     if (response.ok) {
-      // Blob URL을 Data URI로 변환해서 저장
       const dataUri = await blobUrlToDataUri(response.blobUrl);
       if (dataUri) {
         setImageUrl(dataUri);
       } else {
-        setImageUrl(response.blobUrl); // 변환 실패 시 원본 URL 사용
+        setImageUrl(response.blobUrl);
       }
     } else {
       setErrorMsg(response.error || '이미지 생성에 실패했습니다.');
     }
+
     setIsGenerating(false);
   };
 

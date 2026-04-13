@@ -93,3 +93,9 @@
   border-radius: 8px;
   border: 1px solid #ddd;
 }
+
+.image-generation__error {
+  margin: 0;
+  color: #bb2337;
+  font-weight: 600;
+}
