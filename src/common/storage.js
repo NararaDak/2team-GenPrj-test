@@ -135,7 +135,10 @@ export const getImagePromptState = () => {
     strength: 0.75,
     uploadedImageDataUri: '', // 업로드된 원본 이미지 Data URI
     resultImageDataUri: '',   // 생성 결과 이미지 Data URI
+    comfyuiResultImageDataUri: '', // ComfyUI 생성 결과 이미지 Data URI
     backgroundResultImageDataUri: '', // 백그라운드 생성 결과 이미지 Data URI
+    ollamaBackgroundResultImageDataUri: '', // Ollama 백그라운드 생성 결과 이미지 Data URI
+    comfyuiBackgroundResultImageDataUri: '', // ComfyUI 백그라운드 생성 결과 이미지 Data URI
   };
   return getStorageJSON(STORAGE_KEYS.imagePromptState, defaultState);
 };

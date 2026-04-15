@@ -204,3 +204,13 @@ async def makebgimageollama(req: MakeBgImageRequest) -> Response:
 
 /docs/API_backend.md 를 참조하여 jobs를 이용한 비동기 호출로 현재 호출을 변경해 주고,
 sync도 대응하도록 api 폴더 밑에 js파일들에 반영해 줏고, 최대한 변경은  api 밑의 js파일에서만 변경이 이루어 지도록 해주세요
+
+
+/docs/API_backend.md 를 참조하여 jobs를 이용한 비동기 호출을 참조한다.
+
+1. 이미지생성 메뉴의 페이지에서 "생성"버튼 크기를 반으로 나누고 옆에 "생성(comfyui)" 버튼을 만들어서
+클릭시, comfyui를 이용한 이미지생성을 한다.
+2. 이미지 변경 "백그라운드생성(ollamam)"버튼 옆애 "백그라운드생성(comfyui)" 버튼을 만들어서
+클릭시, comfyui를 이용한 백그라운드 이미지생성을 한다.
+
+

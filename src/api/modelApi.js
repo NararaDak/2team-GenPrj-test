@@ -436,6 +436,333 @@ class ModelApi extends BaseApi {
     return this._makeBackgroundImageOllamaAsync(imageBase64, prompt, positivePrompt, negativePrompt);
   }
 
+  async generateImageComfyui(prompt = '', positivePrompt = '', negativePrompt = '', sync = false) {
+    if (sync) {
+      return this._generateImageComfyuiSync(prompt, positivePrompt, negativePrompt);
+    }
+    return this._generateImageComfyuiAsync(prompt, positivePrompt, negativePrompt);
+  }
+
+  async _generateImageComfyuiSync(prompt = '', positivePrompt = '', negativePrompt = '') {
+    const queryParams = new URLSearchParams();
+    if (prompt?.trim()) queryParams.set('prompt', prompt.trim());
+    if (positivePrompt?.trim()) queryParams.set('positive_prompt', positivePrompt.trim());
+    if (negativePrompt?.trim()) queryParams.set('negative_prompt', negativePrompt.trim());
+
+    const queryString = queryParams.toString();
+    const urlPath = queryString ? `/model/generatecomfyui_sync?${queryString}` : '/model/generatecomfyui_sync';
+    const imageGenerateTimeoutMs = 10 * 60 * 1000;
+
+    try {
+      const response = await this.apiClient.get(urlPath, {
+        responseType: 'blob',
+        timeout: imageGenerateTimeoutMs,
+      });
+
+      return {
+        ok: true,
+        apiUrl: this.buildUrl(urlPath),
+        statusCode: response.status,
+        blobUrl: URL.createObjectURL(response.data),
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 시간 초과 (${imageGenerateTimeoutMs / 1000}초)` };
+        }
+        if (error.response) {
+          const gatewayMessage = this.getGatewayErrorMessage(error.response.status, urlPath, imageGenerateTimeoutMs);
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            statusCode: error.response.status,
+            error: gatewayMessage || `API 오류: ${error.response.statusText}`,
+          };
+        }
+
+        if (error.request) {
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            error: this.getNetworkFailureMessage(urlPath),
+          };
+        }
+      }
+
+      return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 실패: ${error.message}` };
+    }
+  }
+
+  async _generateImageComfyuiAsync(prompt = '', positivePrompt = '', negativePrompt = '') {
+    const createJobPath = '/model/generatecomfyui/jobs';
+    const imageGenerateTimeoutMs = 10 * 60 * 1000;
+    const body = {
+      prompt: prompt?.trim() || undefined,
+      positive_prompt: positivePrompt?.trim() || undefined,
+      negative_prompt: negativePrompt?.trim() || undefined,
+    };
+
+    try {
+      const createResponse = await this.apiClient.post(createJobPath, body, {
+        timeout: 30000,
+      });
+      const jobId = createResponse.data?.job_id;
+
+      if (!jobId) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(createJobPath),
+          error: 'Job ID를 받지 못했습니다.',
+        };
+      }
+
+      const jobStatusPath = `/model/generatecomfyui/jobs/${jobId}`;
+      const pollResult = await this.pollJobStatus(jobStatusPath, imageGenerateTimeoutMs);
+
+      if (!pollResult.ok) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(jobStatusPath),
+          error: pollResult.error,
+        };
+      }
+
+      const resultPath = `/model/generatecomfyui/jobs/${jobId}/result`;
+      const fetchResult = await this.fetchJobResult(resultPath);
+
+      return {
+        ...fetchResult,
+        apiUrl: this.buildUrl(resultPath),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        apiUrl: this.buildUrl(createJobPath),
+        error: `비동기 요청 실패: ${error.message}`,
+      };
+    }
+  }
+
+  async changeImageComfyui(prompt = '', imageBase64, strength = 0.75, positivePrompt = '', negativePrompt = '', sync = false) {
+    if (sync) {
+      return this._changeImageComfyuiSync(prompt, imageBase64, strength, positivePrompt, negativePrompt);
+    }
+    return this._changeImageComfyuiAsync(prompt, imageBase64, strength, positivePrompt, negativePrompt);
+  }
+
+  async _changeImageComfyuiSync(prompt = '', imageBase64, strength = 0.75, positivePrompt = '', negativePrompt = '') {
+    const urlPath = '/model/changeimagecomfyui_sync';
+    const imagePromptTimeoutMs = 20 * 60 * 1000;
+    const body = {
+      prompt: prompt?.trim() || undefined,
+      positive_prompt: positivePrompt?.trim() || undefined,
+      negative_prompt: negativePrompt?.trim() || undefined,
+      image_base64: imageBase64,
+      strength,
+    };
+
+    try {
+      const response = await this.apiClient.post(urlPath, body, {
+        responseType: 'blob',
+        timeout: imagePromptTimeoutMs,
+      });
+
+      return {
+        ok: true,
+        apiUrl: this.buildUrl(urlPath),
+        statusCode: response.status,
+        blobUrl: URL.createObjectURL(response.data),
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 시간 초과 (${imagePromptTimeoutMs}ms)` };
+        }
+        if (error.response) {
+          const gatewayMessage = this.getGatewayErrorMessage(error.response.status, urlPath, imagePromptTimeoutMs);
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            statusCode: error.response.status,
+            error: gatewayMessage || `API 오류: ${error.response.statusText}`,
+          };
+        }
+
+        if (error.request) {
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            error: this.getNetworkFailureMessage(urlPath),
+          };
+        }
+      }
+
+      return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 실패: ${error.message}` };
+    }
+  }
+
+  async _changeImageComfyuiAsync(prompt = '', imageBase64, strength = 0.75, positivePrompt = '', negativePrompt = '') {
+    const createJobPath = '/model/changeimagecomfyui/jobs';
+    const imagePromptTimeoutMs = 20 * 60 * 1000;
+    const body = {
+      prompt: prompt?.trim() || undefined,
+      positive_prompt: positivePrompt?.trim() || undefined,
+      negative_prompt: negativePrompt?.trim() || undefined,
+      image_base64: imageBase64,
+      strength,
+    };
+
+    try {
+      const createResponse = await this.apiClient.post(createJobPath, body, {
+        timeout: 30000,
+      });
+      const jobId = createResponse.data?.job_id;
+
+      if (!jobId) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(createJobPath),
+          error: 'Job ID를 받지 못했습니다.',
+        };
+      }
+
+      const jobStatusPath = `/model/changeimagecomfyui/jobs/${jobId}`;
+      const pollResult = await this.pollJobStatus(jobStatusPath, imagePromptTimeoutMs);
+
+      if (!pollResult.ok) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(jobStatusPath),
+          error: pollResult.error,
+        };
+      }
+
+      const resultPath = `/model/changeimagecomfyui/jobs/${jobId}/result`;
+      const fetchResult = await this.fetchJobResult(resultPath);
+
+      return {
+        ...fetchResult,
+        apiUrl: this.buildUrl(resultPath),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        apiUrl: this.buildUrl(createJobPath),
+        error: `비동기 요청 실패: ${error.message}`,
+      };
+    }
+  }
+
+  async makeBackgroundImageComfyui(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '', taskPrompt = '', sync = false) {
+    if (sync) {
+      return this._makeBackgroundImageComfyuiSync(imageBase64, prompt, positivePrompt, negativePrompt, taskPrompt);
+    }
+    return this._makeBackgroundImageComfyuiAsync(imageBase64, prompt, positivePrompt, negativePrompt, taskPrompt);
+  }
+
+  async _makeBackgroundImageComfyuiSync(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '', taskPrompt = '') {
+    const urlPath = '/model/makebgimagecomfyui_sync';
+    const backgroundImageTimeoutMs = 20 * 60 * 1000;
+    const body = {
+      prompt: prompt?.trim() || undefined,
+      positive_prompt: positivePrompt?.trim() || undefined,
+      negative_prompt: negativePrompt?.trim() || undefined,
+      task_prompt: taskPrompt?.trim() || undefined,
+      image_base64: imageBase64,
+    };
+
+    try {
+      const response = await this.apiClient.post(urlPath, body, {
+        responseType: 'blob',
+        timeout: backgroundImageTimeoutMs,
+      });
+
+      return {
+        ok: true,
+        apiUrl: this.buildUrl(urlPath),
+        statusCode: response.status,
+        blobUrl: URL.createObjectURL(response.data),
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 시간 초과 (${backgroundImageTimeoutMs}ms)` };
+        }
+        if (error.response) {
+          const gatewayMessage = this.getGatewayErrorMessage(error.response.status, urlPath, backgroundImageTimeoutMs);
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            statusCode: error.response.status,
+            error: gatewayMessage || `API 오류: ${error.response.statusText}`,
+          };
+        }
+
+        if (error.request) {
+          return {
+            ok: false,
+            apiUrl: this.buildUrl(urlPath),
+            error: this.getNetworkFailureMessage(urlPath),
+          };
+        }
+      }
+
+      return { ok: false, apiUrl: this.buildUrl(urlPath), error: `요청 실패: ${error.message}` };
+    }
+  }
+
+  async _makeBackgroundImageComfyuiAsync(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '', taskPrompt = '') {
+    const createJobPath = '/model/makebgimagecomfyui/jobs';
+    const backgroundImageTimeoutMs = 20 * 60 * 1000;
+    const body = {
+      prompt: prompt?.trim() || undefined,
+      positive_prompt: positivePrompt?.trim() || undefined,
+      negative_prompt: negativePrompt?.trim() || undefined,
+      task_prompt: taskPrompt?.trim() || undefined,
+      image_base64: imageBase64,
+    };
+
+    try {
+      const createResponse = await this.apiClient.post(createJobPath, body, {
+        timeout: 30000,
+      });
+      const jobId = createResponse.data?.job_id;
+
+      if (!jobId) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(createJobPath),
+          error: 'Job ID를 받지 못했습니다.',
+        };
+      }
+
+      const jobStatusPath = `/model/makebgimagecomfyui/jobs/${jobId}`;
+      const pollResult = await this.pollJobStatus(jobStatusPath, backgroundImageTimeoutMs);
+
+      if (!pollResult.ok) {
+        return {
+          ok: false,
+          apiUrl: this.buildUrl(jobStatusPath),
+          error: pollResult.error,
+        };
+      }
+
+      const resultPath = `/model/makebgimagecomfyui/jobs/${jobId}/result`;
+      const fetchResult = await this.fetchJobResult(resultPath);
+
+      return {
+        ...fetchResult,
+        apiUrl: this.buildUrl(resultPath),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        apiUrl: this.buildUrl(createJobPath),
+        error: `비동기 요청 실패: ${error.message}`,
+      };
+    }
+  }
+
   async _makeBackgroundImageOllamaSync(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '') {
     const urlPath = '/model/makebgimageollama_sync';
     const backgroundImageTimeoutMs = 10 * 60 * 1000;

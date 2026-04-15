@@ -48,6 +48,21 @@
   cursor: pointer;
 }
 
+.image-generation__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.image-generation__btn--secondary {
+  border-color: #3f8d72;
+  background: #3f8d72;
+}
+
+.image-generation__btn--secondary:hover:not(:disabled) {
+  background: #357861;
+}
+
 .image-generation__btn:hover:not(:disabled) {
   background: #4c76cb;
 }
@@ -98,4 +113,10 @@
   margin: 0;
   color: #bb2337;
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .image-generation__actions {
+    grid-template-columns: 1fr;
+  }
 }

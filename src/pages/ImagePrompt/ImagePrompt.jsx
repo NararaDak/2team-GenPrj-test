@@ -39,8 +39,10 @@ const ImagePrompt = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [strength, setStrength] = useState(savedState.strength || 0.75);
   const [resultImageUrl, setResultImageUrl] = useState(savedState.resultImageDataUri || '');
+  const [comfyuiResultImageUrl, setComfyuiResultImageUrl] = useState(savedState.comfyuiResultImageDataUri || '');
   const [backgroundResultImageUrl, setBackgroundResultImageUrl] = useState(savedState.backgroundResultImageDataUri || '');
   const [ollamaBackgroundResultImageUrl, setOllamaBackgroundResultImageUrl] = useState(savedState.ollamaBackgroundResultImageDataUri || '');
+  const [comfyuiBackgroundResultImageUrl, setComfyuiBackgroundResultImageUrl] = useState(savedState.comfyuiBackgroundResultImageDataUri || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -54,10 +56,12 @@ const ImagePrompt = () => {
       strength,
       uploadedImageDataUri: uploadedImageUrl,
       resultImageDataUri: resultImageUrl,
+      comfyuiResultImageDataUri: comfyuiResultImageUrl,
       backgroundResultImageDataUri: backgroundResultImageUrl,
       ollamaBackgroundResultImageDataUri: ollamaBackgroundResultImageUrl,
+      comfyuiBackgroundResultImageDataUri: comfyuiBackgroundResultImageUrl,
     });
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl]);
 
   // 언마운트 시 상태 저장 (명시적 보장)
   useEffect(() => {
@@ -69,11 +73,13 @@ const ImagePrompt = () => {
         strength,
         uploadedImageDataUri: uploadedImageUrl,
         resultImageDataUri: resultImageUrl,
+        comfyuiResultImageDataUri: comfyuiResultImageUrl,
         backgroundResultImageDataUri: backgroundResultImageUrl,
         ollamaBackgroundResultImageDataUri: ollamaBackgroundResultImageUrl,
+        comfyuiBackgroundResultImageDataUri: comfyuiBackgroundResultImageUrl,
       });
     };
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl]);
 
   const handlePromptChange = (event) => {
     setPromptText(event.target.value);
@@ -129,6 +135,44 @@ const ImagePrompt = () => {
 
       const generatedImageUrl = await getGeneratedImageDataUri(response, '이미지 변환에 실패했습니다.');
       if (generatedImageUrl) setResultImageUrl(generatedImageUrl);
+    } catch (error) {
+      setErrorMsg(`오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+      setLoadingText('');
+    }
+  };
+
+  const handleGenerateComfyuiClick = async () => {
+    const hasImage = uploadedFile !== null || uploadedImageUrl !== '';
+    if (!hasImage) {
+      setErrorMsg('이미지를 먼저 업로드하거나 붙여넣기 해주세요.');
+      return;
+    }
+
+    if (!promptText.trim() && !positivePromptText.trim()) {
+      setErrorMsg('ComfyUI 생성은 기본 프롬프트 또는 포지티브 프롬프트가 필요합니다.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setLoadingText('이미지 변환 중입니다(comfyui). 잠시만 기다려 주세요.');
+    setErrorMsg('');
+
+    try {
+      const imageBase64 = uploadedFile
+        ? await fileToBase64(uploadedFile)
+        : uploadedImageUrl;
+      const response = await modelApi.changeImageComfyui(
+        promptText,
+        imageBase64,
+        strength,
+        positivePromptText,
+        negativePromptText,
+      );
+
+      const generatedImageUrl = await getGeneratedImageDataUri(response, '이미지 변환(comfyui)에 실패했습니다.');
+      if (generatedImageUrl) setComfyuiResultImageUrl(generatedImageUrl);
     } catch (error) {
       setErrorMsg(`오류가 발생했습니다: ${error.message}`);
     } finally {
@@ -193,6 +237,43 @@ const ImagePrompt = () => {
 
       const generatedImageUrl = await getGeneratedImageDataUri(response, '백그라운드 생성(ollama)에 실패했습니다.');
       if (generatedImageUrl) setOllamaBackgroundResultImageUrl(generatedImageUrl);
+    } catch (error) {
+      setErrorMsg(`오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+      setLoadingText('');
+    }
+  };
+
+  const handleBackgroundGenerateComfyuiClick = async () => {
+    const hasImage = uploadedFile !== null || uploadedImageUrl !== '';
+    if (!hasImage) {
+      setErrorMsg('이미지를 먼저 업로드하거나 붙여넣기 해주세요.');
+      return;
+    }
+
+    if (!promptText.trim() && !positivePromptText.trim()) {
+      setErrorMsg('ComfyUI 백그라운드 생성은 기본 프롬프트 또는 포지티브 프롬프트가 필요합니다.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setLoadingText('백그라운드 생성 중입니다(comfyui). 잠시만 기다려 주세요.');
+    setErrorMsg('');
+
+    try {
+      const imageBase64 = uploadedFile
+        ? await fileToBase64(uploadedFile)
+        : uploadedImageUrl;
+      const response = await modelApi.makeBackgroundImageComfyui(
+        imageBase64,
+        promptText,
+        positivePromptText,
+        negativePromptText,
+      );
+
+      const generatedImageUrl = await getGeneratedImageDataUri(response, '백그라운드 생성(comfyui)에 실패했습니다.');
+      if (generatedImageUrl) setComfyuiBackgroundResultImageUrl(generatedImageUrl);
     } catch (error) {
       setErrorMsg(`오류가 발생했습니다: ${error.message}`);
     } finally {
@@ -323,6 +404,14 @@ const ImagePrompt = () => {
             {isGenerating ? '생성 중...' : '생성'}
           </button>
           <button
+            className="image-prompt__btn"
+            type="button"
+            onClick={handleGenerateComfyuiClick}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '생성 중...' : '생성(comfyui)'}
+          </button>
+          <button
             className="image-prompt__btn image-prompt__btn--secondary"
             type="button"
             onClick={handleBackgroundGenerateClick}
@@ -337,6 +426,14 @@ const ImagePrompt = () => {
             disabled={isGenerating}
           >
             {isGenerating ? '생성 중...' : '백그라운드생성(ollama)'}
+          </button>
+          <button
+            className="image-prompt__btn image-prompt__btn--secondary"
+            type="button"
+            onClick={handleBackgroundGenerateComfyuiClick}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '생성 중...' : '백그라운드생성(comfyui)'}
           </button>
         </div>
       </div>
@@ -365,6 +462,23 @@ const ImagePrompt = () => {
         ) : (
           <div className="image-prompt__empty-result" aria-label="생성 결과 빈 구역">
             생성 결과가 없습니다.
+          </div>
+        )}
+      </div>
+
+      <div className="image-prompt__result-section">
+        <h3 className="image-prompt__result-title">생성 결과(comfyui)</h3>
+        {comfyuiResultImageUrl ? (
+          <div className="image-prompt__generated-box">
+            <img
+              className="image-prompt__generated-image"
+              src={comfyuiResultImageUrl}
+              alt="생성된 이미지(comfyui)"
+            />
+          </div>
+        ) : (
+          <div className="image-prompt__empty-result" aria-label="생성 결과(comfyui) 빈 구역">
+            생성 결과(comfyui)가 없습니다.
           </div>
         )}
       </div>
@@ -399,6 +513,23 @@ const ImagePrompt = () => {
         ) : (
           <div className="image-prompt__empty-result" aria-label="백그라운드 생성 결과(ollama) 빈 구역">
             백그라운드 생성 결과(ollama)가 없습니다.
+          </div>
+        )}
+      </div>
+
+      <div className="image-prompt__result-section">
+        <h3 className="image-prompt__result-title">백그라운드 생성 결과(comfyui)</h3>
+        {comfyuiBackgroundResultImageUrl ? (
+          <div className="image-prompt__generated-box">
+            <img
+              className="image-prompt__generated-image"
+              src={comfyuiBackgroundResultImageUrl}
+              alt="백그라운드 생성된 이미지(comfyui)"
+            />
+          </div>
+        ) : (
+          <div className="image-prompt__empty-result" aria-label="백그라운드 생성 결과(comfyui) 빈 구역">
+            백그라운드 생성 결과(comfyui)가 없습니다.
           </div>
         )}
       </div>

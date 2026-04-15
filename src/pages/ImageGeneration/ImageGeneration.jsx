@@ -27,7 +27,8 @@ const ImageGeneration = () => {
   const [positivePromptText, setPositivePromptText] = useState(savedState.positivePromptText || '');
   const [negativePromptText, setNegativePromptText] = useState(savedState.negativePromptText || '');
   const [imageUrl, setImageUrl] = useState(savedState.imageDataUri || '');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingMode, setGeneratingMode] = useState('');
+  const [loadingText, setLoadingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   // 상태 변경 시 저장
@@ -64,29 +65,40 @@ const ImageGeneration = () => {
     setNegativePromptText(event.target.value);
   };
 
-  const handleGenerateClick = async () => {
-    if (!promptText.trim()) return;
-    setIsGenerating(true);
+  const handleGenerateClick = async (mode = 'default') => {
+    const trimmedPrompt = promptText.trim();
+    const trimmedPositivePrompt = positivePromptText.trim();
+
+    if (mode === 'default' && !trimmedPrompt) return;
+    if (mode === 'comfyui' && !trimmedPrompt && !trimmedPositivePrompt) {
+      setErrorMsg('ComfyUI 생성은 기본 프롬프트 또는 포지티브 프롬프트가 필요합니다.');
+      return;
+    }
+
+    setGeneratingMode(mode);
+    setLoadingText(mode === 'comfyui' ? '이미지 생성 중입니다(comfyui). 잠시만 기다려 주세요.' : '이미지 생성 중입니다. 잠시만 기다려 주세요.');
     setImageUrl('');
     setErrorMsg('');
 
-    const response = await modelApi.generateImage(
-      promptText.trim(),
-      positivePromptText,
-      negativePromptText,
-    );
-    if (response.ok) {
-      const dataUri = await blobUrlToDataUri(response.blobUrl);
-      if (dataUri) {
-        setImageUrl(dataUri);
-      } else {
-        setImageUrl(response.blobUrl);
-      }
-    } else {
-      setErrorMsg(response.error || '이미지 생성에 실패했습니다.');
-    }
+    try {
+      const response = mode === 'comfyui'
+        ? await modelApi.generateImageComfyui(trimmedPrompt, positivePromptText, negativePromptText)
+        : await modelApi.generateImage(trimmedPrompt, positivePromptText, negativePromptText);
 
-    setIsGenerating(false);
+      if (response.ok) {
+        const dataUri = await blobUrlToDataUri(response.blobUrl);
+        if (dataUri) {
+          setImageUrl(dataUri);
+        } else {
+          setImageUrl(response.blobUrl);
+        }
+      } else {
+        setErrorMsg(response.error || '이미지 생성에 실패했습니다.');
+      }
+    } finally {
+      setGeneratingMode('');
+      setLoadingText('');
+    }
   };
 
   return (
@@ -130,19 +142,28 @@ const ImageGeneration = () => {
           rows={6}
         />
 
-        <button
-          className="image-generation__btn"
-          onClick={handleGenerateClick}
-          disabled={isGenerating}
-        >
-          {isGenerating ? '생성 중...' : '생성'}
-        </button>
+        <div className="image-generation__actions">
+          <button
+            className="image-generation__btn"
+            onClick={() => handleGenerateClick('default')}
+            disabled={Boolean(generatingMode)}
+          >
+            {generatingMode === 'default' ? '생성 중...' : '생성'}
+          </button>
+          <button
+            className="image-generation__btn image-generation__btn--secondary"
+            onClick={() => handleGenerateClick('comfyui')}
+            disabled={Boolean(generatingMode)}
+          >
+            {generatingMode === 'comfyui' ? '생성 중...' : '생성(comfyui)'}
+          </button>
+        </div>
       </div>
 
-      {isGenerating && (
+      {Boolean(generatingMode) && (
         <div className="image-generation__loading" role="status" aria-live="polite">
           <span className="image-generation__loading-spinner" aria-hidden="true" />
-          이미지 생성 중입니다. 잠시만 기다려 주세요.
+          {loadingText}
         </div>
       )}
 
