@@ -2,6 +2,38 @@ import axios from 'axios';
 import BaseApi from './baseApi';
 
 class ModelApi extends BaseApi {
+    async generateVlmGptImage(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '') {
+      const urlPath = '/model/generate_vlm_gpt_image';
+      const body = {
+        image_base64: imageBase64,
+        prompt: prompt || undefined,
+        positive_prompt: positivePrompt || undefined,
+        negative_prompt: negativePrompt || undefined,
+      };
+      try {
+        const response = await this.apiClient.post(urlPath, body, {
+          responseType: 'blob',
+          timeout: 10 * 60 * 1000,
+        });
+        // blob을 json으로 변환
+        const text = await response.data.text();
+        const data = JSON.parse(text);
+        if (data.result !== 'ok') {
+          return { ok: false, error: data.error || '이미지 생성 실패', data };
+        }
+        return {
+          ok: true,
+          vlmText: data.vlm_text,
+          positivePrompt: data.positive_prompt,
+          negativePrompt: data.negative_prompt,
+          imageBase64: data.image_base64,
+          contentType: data.content_type,
+          data,
+        };
+      } catch (error) {
+        return { ok: false, error: error.message || '요청 실패' };
+      }
+    }
   // 폴링 인터벌 (밀리초)
   pollIntervalMs = 1000;
 

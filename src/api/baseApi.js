@@ -15,6 +15,11 @@ class BaseApi {
   }
 
   buildUrl(urlPath) {
+    // dev 환경에서는 baseURL이 프록시 경로(/addhelper)라서 전체 URL이 필요 없음
+    if (import.meta.env && import.meta.env.DEV) {
+      return `${this.backendUrl}${urlPath}`;
+    }
+    // prod 환경에서는 실제 백엔드 전체 URL
     return `${this.backendUrl}${urlPath}`;
   }
 

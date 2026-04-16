@@ -139,6 +139,7 @@ export const getImagePromptState = () => {
     backgroundResultImageDataUri: '', // 백그라운드 생성 결과 이미지 Data URI
     ollamaBackgroundResultImageDataUri: '', // Ollama 백그라운드 생성 결과 이미지 Data URI
     comfyuiBackgroundResultImageDataUri: '', // ComfyUI 백그라운드 생성 결과 이미지 Data URI
+    vlmGptBackgroundResult: { imageDataUri: '', vlmText: '' },
   };
   return getStorageJSON(STORAGE_KEYS.imagePromptState, defaultState);
 };

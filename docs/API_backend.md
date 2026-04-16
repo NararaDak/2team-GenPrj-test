@@ -1,3 +1,70 @@
+## 11. VLM+GPT+ComfyUI 통합 이미지 생성 API
+
+### 11-1. 엔드포인트
+
+```
+POST /addhelper/model/generate_vlm_gpt_image
+```
+
+이미지(base64), 프롬프트, 포지티브/네거티브 프롬프트를 받아
+1. 이미지에서 VLM(Florence)로 설명 텍스트 추출
+2. 해당 텍스트와 입력 프롬프트들을 GPT(OpenAI)로 최적화
+3. ComfyUI로 이미지를 생성하여 반환합니다.
+
+### 11-2. 요청 바디 예시
+
+```json
+{
+	"image_base64": "data:image/png;base64,... 또는 순수 base64 문자열",
+	"prompt": "광고용 커피 사진 스타일로 변환",
+	"positive_prompt": "high detail, commercial, coffee, 8k",
+	"negative_prompt": "blurry, low quality"
+}
+```
+
+### 11-3. 응답 예시
+
+```json
+{
+	"result": "ok",
+	"vlm_text": "A white coffee cup on a saucer...", // VLM이 추출한 이미지 설명
+	"positive_prompt": "high detail, commercial, coffee, 8k",
+	"negative_prompt": "blurry, low quality",
+	"image_base64": "iVBORw0KGgoAAAANSUhEUgAA...", // 생성된 이미지 base64 (data: 접두사 없음)
+	"content_type": "image/png"
+}
+```
+
+실패 시:
+
+```json
+{
+	"result": "error",
+	"error": "오류 메시지"
+}
+```
+
+### 11-4. React fetch 예시
+
+```tsㅔㅛ
+type VlmGptImagePayload = {
+	image_base64: string;
+	prompt?: string;
+	positive_prompt?: string;
+	negative_prompt?: string;
+};
+
+export async function generateVlmGptImage(payload: VlmGptImagePayload) {
+	const response = await fetch(`${API_BASE_URL}/addhelper/model/generate_vlm_gpt_image`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload),
+	});
+	const json = await response.json();
+	if (json.result !== 'ok') throw new Error(json.error || '이미지 생성 실패');
+	return json;
+}
+```
 # React API 호출 가이드
 
 이 문서는 현재 백엔드의 REST API를 React에서 호출하는 방법을 정리한 문서입니다.

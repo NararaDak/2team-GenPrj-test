@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_URL = 'https://gen-proj.duckdns.org/addhelper';
+const DEFAULT_BACKEND_URL = 'https://gen-proj.duckdns.org';
 
 const trimTrailingSlash = (value) => {
   const trimmed = value.replace(/\/+$/, '');

@@ -144,73 +144,37 @@ def download_image_by_id(req: ImageInfoRequest):
 
  
 
- 이미지변경 메뉴 화면의
-"백그라운드생성" 버튼 옆에 "백그라운드생성(ollama)" 버튼을 만들고,
-서버의 아래 API를 호출하여서, 생성 결과를  맨밑에 추가해 주세요.
- "백그라운드생성"과 동일한 구조로 만들어 주세요. 
-@router.post("/makebgimageollama")
-async def makebgimageollama(req: MakeBgImageRequest) -> Response:
-    raw_base64 = (req.image_base64 or "").strip()
-    if not raw_base64:
-        return JSONResponse(content=get_error_response("image_base64는 필수입니다."))
-
-    if "," in raw_base64:
-        raw_base64 = raw_base64.split(",", 1)[1]
-
-    try:
-        # 입력 이미지가 유효한 base64인지 먼저 확인합니다.
-        base64.b64decode(raw_base64, validate=True)
-    except Exception:
-        return JSONResponse(content=get_error_response("유효한 base64 이미지가 아닙니다."))
-
-    try:
-        gemma_service = Gemma4OllamaService()
-        prompt_bundle = gemma_service.generate_background_prompt_bundle(
-            raw_base64=raw_base64,
-            prompt=req.prompt,
-            positive_prompt=req.positive_prompt,
-            negative_prompt=req.negative_prompt,
-        )
-
-        engine_url = _get_engine_base_url()
-        image_url = f"{engine_url}/generate"
-        payload = {
-            "positive_prompt": prompt_bundle.positive_prompt,
-            "negative_prompt": prompt_bundle.negative_prompt,
-        }
-        request = Request(
-            image_url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-
-        with urlopen(request, timeout=300) as upstream_response:
-            body = upstream_response.read()
-            content_type = upstream_response.headers.get_content_type()
-
-        if not content_type.startswith("image/"):
-            out_map: dict[str, Any] = {}
-            out_map.update(get_error_response("Upstream did not return image data."))
-            out_map["upstream_content_type"] = content_type
-            out_map["upstream_body_preview"] = body[:300].decode("utf-8", errors="ignore")
-            return JSONResponse(content=out_map)
-
-        return Response(content=body, media_type=content_type)
-    except Exception as ex:
-        return JSONResponse(content=get_error_response(str(ex)))
 
 
 
-/docs/API_backend.md 를 참조하여 jobs를 이용한 비동기 호출로 현재 호출을 변경해 주고,
-sync도 대응하도록 api 폴더 밑에 js파일들에 반영해 줏고, 최대한 변경은  api 밑의 js파일에서만 변경이 이루어 지도록 해주세요
+
+        
+
+       
+
+      
+
+     
+
+    
+generate_vlm_gpt_image
+
+이미지 변경 메뉴의 화면에
+"백그라운드생성(generate_vlm_gpt_image)" 버튼을 만들고,
+API_backend.md 의 generate_vlm_gpt_image 함수를 이용해서,
+이미지 생성을 하고 보여 주세요.
 
 
-/docs/API_backend.md 를 참조하여 jobs를 이용한 비동기 호출을 참조한다.
-
-1. 이미지생성 메뉴의 페이지에서 "생성"버튼 크기를 반으로 나누고 옆에 "생성(comfyui)" 버튼을 만들어서
-클릭시, comfyui를 이용한 이미지생성을 한다.
-2. 이미지 변경 "백그라운드생성(ollamam)"버튼 옆애 "백그라운드생성(comfyui)" 버튼을 만들어서
-클릭시, comfyui를 이용한 백그라운드 이미지생성을 한다.
+ 
 
 
+
+
+
+
+
+
+
+
+            negative_prompt=req.negative_promp클릭시, comfyui를 이용한 백그라운드 이미지생성을 한다.
+			

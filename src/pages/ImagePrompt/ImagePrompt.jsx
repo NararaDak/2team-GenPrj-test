@@ -44,6 +44,7 @@ const ImagePrompt = () => {
   const [ollamaBackgroundResultImageUrl, setOllamaBackgroundResultImageUrl] = useState(savedState.ollamaBackgroundResultImageDataUri || '');
   const [comfyuiBackgroundResultImageUrl, setComfyuiBackgroundResultImageUrl] = useState(savedState.comfyuiBackgroundResultImageDataUri || '');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [vlmGptBackgroundResult, setVlmGptBackgroundResult] = useState(savedState.vlmGptBackgroundResult || { imageDataUri: '', vlmText: '' });
   const [loadingText, setLoadingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -60,8 +61,9 @@ const ImagePrompt = () => {
       backgroundResultImageDataUri: backgroundResultImageUrl,
       ollamaBackgroundResultImageDataUri: ollamaBackgroundResultImageUrl,
       comfyuiBackgroundResultImageDataUri: comfyuiBackgroundResultImageUrl,
+      vlmGptBackgroundResult,
     });
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl, vlmGptBackgroundResult]);
 
   // 언마운트 시 상태 저장 (명시적 보장)
   useEffect(() => {
@@ -77,9 +79,42 @@ const ImagePrompt = () => {
         backgroundResultImageDataUri: backgroundResultImageUrl,
         ollamaBackgroundResultImageDataUri: ollamaBackgroundResultImageUrl,
         comfyuiBackgroundResultImageDataUri: comfyuiBackgroundResultImageUrl,
+        vlmGptBackgroundResult,
       });
     };
-  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, strength, uploadedImageUrl, resultImageUrl, comfyuiResultImageUrl, backgroundResultImageUrl, ollamaBackgroundResultImageUrl, comfyuiBackgroundResultImageUrl, vlmGptBackgroundResult]);
+  const handleBackgroundGenerateVlmGptClick = async () => {
+    const hasImage = uploadedFile !== null || uploadedImageUrl !== '';
+    if (!hasImage) {
+      setErrorMsg('이미지를 먼저 업로드하거나 붙여넣기 해주세요.');
+      return;
+    }
+    setIsGenerating(true);
+    setLoadingText('백그라운드 생성 중입니다(generate_vlm_gpt_image). 잠시만 기다려 주세요.');
+    setErrorMsg('');
+    try {
+      const imageBase64 = uploadedFile
+        ? await fileToBase64(uploadedFile)
+        : uploadedImageUrl;
+      const response = await modelApi.generateVlmGptImage(
+        imageBase64,
+        promptText,
+        positivePromptText,
+        negativePromptText,
+      );
+      if (response.ok && response.imageBase64) {
+        const dataUri = `data:${response.contentType || 'image/png'};base64,${response.imageBase64}`;
+        setVlmGptBackgroundResult({ imageDataUri: dataUri, vlmText: response.vlmText || '' });
+      } else {
+        setErrorMsg(response.error || '백그라운드 생성(generate_vlm_gpt_image)에 실패했습니다.');
+      }
+    } catch (error) {
+      setErrorMsg(`오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+      setLoadingText('');
+    }
+  };
 
   const handlePromptChange = (event) => {
     setPromptText(event.target.value);
@@ -427,6 +462,35 @@ const ImagePrompt = () => {
           >
             {isGenerating ? '생성 중...' : '백그라운드생성(ollama)'}
           </button>
+          <button
+            className="image-prompt__btn image-prompt__btn--secondary"
+            type="button"
+            onClick={handleBackgroundGenerateVlmGptClick}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '생성 중...' : '백그라운드생성(generate_vlm_gpt_image)'}
+          </button>
+                <div className="image-prompt__result-section">
+                  <h3 className="image-prompt__result-title">백그라운드 생성 결과(generate_vlm_gpt_image)</h3>
+                  {vlmGptBackgroundResult.imageDataUri ? (
+                    <div className="image-prompt__generated-box">
+                      <img
+                        className="image-prompt__generated-image"
+                        src={vlmGptBackgroundResult.imageDataUri}
+                        alt="백그라운드 생성된 이미지(generate_vlm_gpt_image)"
+                      />
+                      {vlmGptBackgroundResult.vlmText && (
+                        <div style={{ marginTop: '8px', color: '#2a3e58', fontSize: '0.97rem' }}>
+                          <strong>VLM 설명:</strong> {vlmGptBackgroundResult.vlmText}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="image-prompt__empty-result" aria-label="백그라운드 생성 결과(generate_vlm_gpt_image) 빈 구역">
+                      백그라운드 생성 결과(generate_vlm_gpt_image)가 없습니다.
+                    </div>
+                  )}
+                </div>
           <button
             className="image-prompt__btn image-prompt__btn--secondary"
             type="button"
