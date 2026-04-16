@@ -24,6 +24,11 @@ const Layout = () => {
             </NavLink>
           </li>
           <li>
+            <NavLink to="/background-generation" className={({ isActive }) => (isActive ? 'active' : '')}>
+              백그라운드생성
+            </NavLink>
+          </li>
+          <li>
             <NavLink to="/adcopy-generation" className={({ isActive }) => (isActive ? 'active' : '')}>
               광고문구 생성
             </NavLink>

@@ -21,13 +21,15 @@ const blobUrlToDataUri = async (blobUrl) => {
 };
 
 const ImageGeneration = () => {
-  // 초기 상태 한 번만 로드
+  // 초기 상태 로드
   const savedState = getImageGenerationState();
   const [promptText, setPromptText] = useState(savedState.promptText || '');
   const [positivePromptText, setPositivePromptText] = useState(savedState.positivePromptText || '');
   const [negativePromptText, setNegativePromptText] = useState(savedState.negativePromptText || '');
-  const [imageUrl, setImageUrl] = useState(savedState.imageDataUri || '');
+  const [resultImageUrl, setResultImageUrl] = useState(savedState.resultImageDataUri || '');
+  const [comfyuiResultImageUrl, setComfyuiResultImageUrl] = useState(savedState.comfyuiResultImageDataUri || '');
   const [generatingMode, setGeneratingMode] = useState('');
+  const [activeTab, setActiveTab] = useState('default');
   const [loadingText, setLoadingText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -37,9 +39,10 @@ const ImageGeneration = () => {
       promptText,
       positivePromptText,
       negativePromptText,
-      imageDataUri: imageUrl,
+      resultImageDataUri: resultImageUrl,
+      comfyuiResultImageDataUri: comfyuiResultImageUrl,
     });
-  }, [promptText, positivePromptText, negativePromptText, imageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, resultImageUrl, comfyuiResultImageUrl]);
 
   // 언마운트 시 상태 저장 (명시적 보장)
   useEffect(() => {
@@ -48,10 +51,11 @@ const ImageGeneration = () => {
         promptText,
         positivePromptText,
         negativePromptText,
-        imageDataUri: imageUrl,
+        resultImageDataUri: resultImageUrl,
+        comfyuiResultImageDataUri: comfyuiResultImageUrl,
       });
     };
-  }, [promptText, positivePromptText, negativePromptText, imageUrl]);
+  }, [promptText, positivePromptText, negativePromptText, resultImageUrl, comfyuiResultImageUrl]);
 
   const handlePromptChange = (event) => {
     setPromptText(event.target.value);
@@ -77,7 +81,10 @@ const ImageGeneration = () => {
 
     setGeneratingMode(mode);
     setLoadingText(mode === 'comfyui' ? '이미지 생성 중입니다(comfyui). 잠시만 기다려 주세요.' : '이미지 생성 중입니다. 잠시만 기다려 주세요.');
-    setImageUrl('');
+    
+    if (mode === 'comfyui') setComfyuiResultImageUrl('');
+    else setResultImageUrl('');
+    
     setErrorMsg('');
 
     try {
@@ -87,10 +94,11 @@ const ImageGeneration = () => {
 
       if (response.ok) {
         const dataUri = await blobUrlToDataUri(response.blobUrl);
-        if (dataUri) {
-          setImageUrl(dataUri);
+        const finalUrl = dataUri || response.blobUrl;
+        if (mode === 'comfyui') {
+          setComfyuiResultImageUrl(finalUrl);
         } else {
-          setImageUrl(response.blobUrl);
+          setResultImageUrl(finalUrl);
         }
       } else {
         setErrorMsg(response.error || '이미지 생성에 실패했습니다.');
@@ -142,21 +150,79 @@ const ImageGeneration = () => {
           rows={6}
         />
 
-        <div className="image-generation__actions">
+        <div className="image-generation__tabs">
           <button
-            className="image-generation__btn"
-            onClick={() => handleGenerateClick('default')}
-            disabled={Boolean(generatingMode)}
+            className={`image-generation__tab ${activeTab === 'default' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('default')}
+            type="button"
           >
-            {generatingMode === 'default' ? '생성 중...' : '생성'}
+            생성
           </button>
           <button
-            className="image-generation__btn image-generation__btn--secondary"
-            onClick={() => handleGenerateClick('comfyui')}
-            disabled={Boolean(generatingMode)}
+            className={`image-generation__tab ${activeTab === 'comfyui' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('comfyui')}
+            type="button"
           >
-            {generatingMode === 'comfyui' ? '생성 중...' : '생성(comfyui)'}
+            생성(comfyui)
           </button>
+        </div>
+
+        <div className="image-generation__tab-content">
+          {activeTab === 'default' ? (
+            <div className="image-generation__tab-pane">
+              <button
+                className="image-generation__btn image-generation__btn--full"
+                type="button"
+                onClick={() => handleGenerateClick('default')}
+                disabled={Boolean(generatingMode)}
+              >
+                {generatingMode === 'default' ? '생성 중...' : '생성'}
+              </button>
+
+              <div className="image-generation__result-section">
+                {resultImageUrl ? (
+                  <div className="image-generation__result">
+                    <img
+                      className="image-generation__result-img"
+                      src={resultImageUrl}
+                      alt="생성된 이미지"
+                    />
+                  </div>
+                ) : (
+                  <div className="image-generation__empty-result" aria-label="생성 결과 빈 구역">
+                    생성 결과가 없습니다.
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="image-generation__tab-pane">
+              <button
+                className="image-generation__btn image-generation__btn--full image-generation__btn--secondary"
+                type="button"
+                onClick={() => handleGenerateClick('comfyui')}
+                disabled={Boolean(generatingMode)}
+              >
+                {generatingMode === 'comfyui' ? '생성 중...' : '생성(comfyui)'}
+              </button>
+
+              <div className="image-generation__result-section">
+                {comfyuiResultImageUrl ? (
+                  <div className="image-generation__result">
+                    <img
+                      className="image-generation__result-img"
+                      src={comfyuiResultImageUrl}
+                      alt="생성된 이미지(comfyui)"
+                    />
+                  </div>
+                ) : (
+                  <div className="image-generation__empty-result" aria-label="생성 결과(comfyui) 빈 구역">
+                    생성 결과(comfyui)가 없습니다.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -169,16 +235,6 @@ const ImageGeneration = () => {
 
       {errorMsg && (
         <p className="image-generation__error" role="alert">{errorMsg}</p>
-      )}
-
-      {imageUrl && (
-        <div className="image-generation__result">
-          <img
-            className="image-generation__result-img"
-            src={imageUrl}
-            alt="생성된 이미지"
-          />
-        </div>
       )}
     </section>
   );

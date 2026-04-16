@@ -10,6 +10,8 @@ import Login from './pages/Login/Login';
 import Signup from './pages/Login/Signup';
 import ImageAttachment from './pages/ImageAttachment/ImageAttachment';
 
+import BackgroundGeneration from './pages/BackgroundGeneration/BackgroundGeneration';
+
 function App() {
   return (
     <Router>
@@ -17,6 +19,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/image-generation" replace />} />
           <Route path="image-generation" element={<ImageGeneration />} />
+          <Route path="background-generation" element={<BackgroundGeneration />} />
           <Route path="adcopy-generation" element={<AdCopyGeneration />} />
           <Route path="image-prompt" element={<ImagePrompt />} />
           <Route path="test" element={<Test />} />

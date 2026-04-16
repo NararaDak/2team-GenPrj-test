@@ -40,6 +40,11 @@
   background: #3f8d72;
 }
 
+.image-prompt__btn--full {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
 .image-prompt__btn--secondary:hover:not(:disabled) {
   background: #357861;
 }
@@ -139,6 +144,47 @@
 .image-prompt__preview-box,
 .image-prompt__generated-box {
   margin-top: 6px;
+}
+
+/* Tabs */
+.image-prompt__tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  border-bottom: 1px solid #d7dce5;
+}
+
+.image-prompt__tab {
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: none;
+  color: #60708a;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s;
+  margin-bottom: -1px;
+}
+
+.image-prompt__tab:hover {
+  color: #24344d;
+  background: #f0f4f8;
+}
+
+.image-prompt__tab.is-active {
+  color: #5a84d6;
+  background: #fff;
+  border-color: #d7dce5;
+  border-bottom-color: #fff;
+}
+
+.image-prompt__tab-content {
+  padding: 16px;
+  border: 1px solid #d7dce5;
+  border-top: none;
+  background: #fff;
+  border-radius: 0 0 10px 10px;
 }
 
 .image-prompt__result-section {

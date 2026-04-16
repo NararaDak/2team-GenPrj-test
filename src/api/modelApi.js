@@ -1,14 +1,22 @@
 import axios from 'axios';
 import BaseApi from './baseApi';
 
+// Data URI에서 프리픽스를 제거하는 내부 헬퍼 (좀 더 견고한 정규식 사용)
+const stripBase64Prefix = (base64Str) => {
+  if (!base64Str) return '';
+  // data:image/png;base64,... 형식을 찾아서 순수 base64만 추출
+  const regex = /^data:image\/[a-z]+;base64,/;
+  return base64Str.replace(regex, '');
+};
+
 class ModelApi extends BaseApi {
     async generateVlmGptImage(imageBase64, prompt = '', positivePrompt = '', negativePrompt = '') {
       const urlPath = '/model/generate_vlm_gpt_image';
       const body = {
-        image_base64: imageBase64,
-        prompt: prompt || undefined,
-        positive_prompt: positivePrompt || undefined,
-        negative_prompt: negativePrompt || undefined,
+        image_base64: stripBase64Prefix(imageBase64),
+        prompt: prompt?.trim() || '',
+        positive_prompt: positivePrompt?.trim() || '',
+        negative_prompt: negativePrompt?.trim() || '',
       };
       try {
         const response = await this.apiClient.post(urlPath, body, {
@@ -186,9 +194,9 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/generate/jobs';
     const imageGenerateTimeoutMs = 10 * 60 * 1000;
     const body = {
-      prompt,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
     };
 
     try {
@@ -297,9 +305,9 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/changeimage/jobs';
     const imagePromptTimeoutMs = 20 * 60 * 1000;
     const body = {
-      prompt,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
       image_base64: imageBase64,
       strength,
     };
@@ -410,11 +418,11 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/makebgimage/jobs';
     const backgroundImageTimeoutMs = 20 * 60 * 1000;
     const body = {
-      prompt: prompt?.trim() || undefined,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
-      task_prompt: taskPrompt?.trim() || undefined,
-      image_base64: imageBase64,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
+      task_prompt: taskPrompt?.trim() || '<DETAILED_CAPTION>',
+      image_base64: stripBase64Prefix(imageBase64),
     };
 
     try {
@@ -529,9 +537,9 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/generatecomfyui/jobs';
     const imageGenerateTimeoutMs = 10 * 60 * 1000;
     const body = {
-      prompt: prompt?.trim() || undefined,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
     };
 
     try {
@@ -637,9 +645,9 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/changeimagecomfyui/jobs';
     const imagePromptTimeoutMs = 20 * 60 * 1000;
     const body = {
-      prompt: prompt?.trim() || undefined,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
       image_base64: imageBase64,
       strength,
     };
@@ -747,11 +755,11 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/makebgimagecomfyui/jobs';
     const backgroundImageTimeoutMs = 20 * 60 * 1000;
     const body = {
-      prompt: prompt?.trim() || undefined,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
-      task_prompt: taskPrompt?.trim() || undefined,
-      image_base64: imageBase64,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
+      task_prompt: taskPrompt?.trim() || '<DETAILED_CAPTION>',
+      image_base64: stripBase64Prefix(imageBase64),
     };
 
     try {
@@ -849,10 +857,10 @@ class ModelApi extends BaseApi {
     const createJobPath = '/model/makebgimageollama/jobs';
     const backgroundImageTimeoutMs = 10 * 60 * 1000;
     const body = {
-      prompt: prompt?.trim() || undefined,
-      positive_prompt: positivePrompt?.trim() || undefined,
-      negative_prompt: negativePrompt?.trim() || undefined,
-      image_base64: imageBase64,
+      prompt: prompt?.trim() || '',
+      positive_prompt: positivePrompt?.trim() || '',
+      negative_prompt: negativePrompt?.trim() || '',
+      image_base64: stripBase64Prefix(imageBase64),
     };
 
     try {

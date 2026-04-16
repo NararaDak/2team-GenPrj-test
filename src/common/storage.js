@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   lastLoginUserId: 'auth.lastLoginUserId',
   adCopyGenerationState: 'page.adCopyGeneration',
   imageGenerationState: 'page.imageGeneration',
+  backgroundGenerationState: 'page.backgroundGeneration',
   imagePromptState: 'page.imagePrompt',
   imageAttachmentState: 'page.imageAttachment',
   testState: 'page.test',
@@ -107,13 +108,33 @@ export const getImageGenerationState = () => {
     promptText: '',
     positivePromptText: '',
     negativePromptText: '',
-    imageDataUri: '', // Base64 Data URI
+    resultImageDataUri: '',   // 기본 생성 결과
+    comfyuiResultImageDataUri: '', // ComfyUI 생성 결과
   };
   return getStorageJSON(STORAGE_KEYS.imageGenerationState, defaultState);
 };
 
 export const setImageGenerationState = (state) => {
   return setStorageJSON(STORAGE_KEYS.imageGenerationState, state);
+};
+
+// 백그라운드 생성 페이지 상태
+export const getBackgroundGenerationState = () => {
+  const defaultState = {
+    promptText: '',
+    positivePromptText: '',
+    negativePromptText: '',
+    uploadedImageDataUri: '',
+    backgroundResultImageDataUri: '',
+    ollamaBackgroundResultImageDataUri: '',
+    comfyuiBackgroundResultImageDataUri: '',
+    vlmGptBackgroundResult: { imageDataUri: '', vlmText: '' },
+  };
+  return getStorageJSON(STORAGE_KEYS.backgroundGenerationState, defaultState);
+};
+
+export const setBackgroundGenerationState = (state) => {
+  return setStorageJSON(STORAGE_KEYS.backgroundGenerationState, state);
 };
 
 // Blob을 Data URI로 변환하는 헬퍼

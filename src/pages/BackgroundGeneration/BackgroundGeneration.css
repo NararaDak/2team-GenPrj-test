@@ -1,3 +1,4 @@
+/* ImageGeneration.css를 복사하여 BackgroundGeneration.css로 생성 */
 .image-generation {
   display: grid;
   gap: 16px;
@@ -101,17 +102,72 @@
   }
 }
 
-.image-generation__result {
-  padding: 16px;
-  border: 1px solid #d7dce5;
-  border-radius: 10px;
-  background: #fff;
+.image-generation__result-section {
+  display: grid;
+  gap: 8px;
 }
 
-.image-generation__result-img {
+.image-generation__result-title {
+  margin: 4px 0 0;
+  color: #24344d;
+  font-size: 1rem;
+}
+
+.image-generation__generated-box {
+  margin-top: 6px;
+}
+
+.image-generation__generated-image {
   max-width: 100%;
   border-radius: 8px;
   border: 1px solid #ddd;
+}
+
+.image-generation__empty-result {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #c1cada;
+  border-radius: 8px;
+  background: #f9fbff;
+  color: #60708a;
+  font-size: 0.95rem;
+}
+
+.image-generation__upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px dashed #c1cada;
+  border-radius: 8px;
+  background-color: #f9fbff;
+}
+
+.image-generation__upload-label {
+  font-weight: 600;
+  color: #2a3e58;
+}
+
+.image-generation__upload-input {
+  font-size: 0.95rem;
+}
+
+.image-generation__preview-image {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.image-generation__error {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  color: #b00020;
+  background-color: #fff0f2;
+  border: 1px solid #f5c2c7;
+  border-radius: 6px;
 }
 
 /* Tabs */
@@ -120,10 +176,11 @@
   gap: 4px;
   margin-top: 12px;
   border-bottom: 1px solid #d7dce5;
+  overflow-x: auto;
 }
 
 .image-generation__tab {
-  padding: 10px 20px;
+  padding: 10px 16px;
   border: 1px solid transparent;
   border-bottom: none;
   background: none;
@@ -133,6 +190,7 @@
   border-radius: 8px 8px 0 0;
   transition: all 0.2s;
   margin-bottom: -1px;
+  white-space: nowrap;
 }
 
 .image-generation__tab:hover {
@@ -153,28 +211,4 @@
   border-top: none;
   background: #fff;
   border-radius: 0 0 10px 10px;
-}
-
-.image-generation__empty-result {
-  min-height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #c1cada;
-  border-radius: 8px;
-  background: #f9fbff;
-  color: #60708a;
-  font-size: 0.95rem;
-}
-
-.image-generation__error {
-  margin: 0;
-  color: #bb2337;
-  font-weight: 600;
-}
-
-@media (max-width: 640px) {
-  .image-generation__actions {
-    grid-template-columns: 1fr;
-  }
 }
